@@ -5,6 +5,7 @@ import com.pm.repository.PersonRepository;
 import com.pm.util.exception.PersonNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -43,30 +44,27 @@ public class PersonRestController {
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<?> create(@RequestBody Person person) {
-        final Person savedPerson = personRepository.save(person);
+    public ResponseEntity<Person> create(@RequestBody Person personRequest) {
+        final Person savedPerson = personRepository.save(personRequest);
 
-        return ResponseEntity.created(
-                getPersonLocation(savedPerson.getPersonId())
-        ).build();
+        return prepareResponse(HttpStatus.CREATED, savedPerson);
     }
 
     @RequestMapping(method = RequestMethod.PUT, value = "/{personId}")
-    public ResponseEntity<?> update(@PathVariable Long personId, @RequestBody Person person) {
+    public ResponseEntity<Person> update(@PathVariable Long personId, @RequestBody Person personRequest) {
         final Person updatedPerson = Optional.ofNullable(
                 personRepository.findOne(personId)
         )
-        .orElseThrow(
-                () -> new PersonNotFoundException(String.valueOf(personId))
-        );
+                .orElseThrow(
+                        () -> new PersonNotFoundException(String.valueOf(personId))
+                );
 
-        updatedPerson.setFirstName(person.getFirstName());
-        updatedPerson.setLastName(person.getLastName());
+        updatedPerson.setFirstName(personRequest.getFirstName());
+        updatedPerson.setLastName(personRequest.getLastName());
+
         personRepository.save(updatedPerson);
 
-        return ResponseEntity
-                .status(HttpStatus.ACCEPTED)
-                .body(updatedPerson);
+        return prepareResponse(HttpStatus.OK, updatedPerson);
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = "/{personId}")
@@ -84,6 +82,13 @@ public class PersonRestController {
                         personId
                 )
                 .toUri();
+    }
+
+    private ResponseEntity<Person> prepareResponse(final HttpStatus status, final Person person) {
+        return ResponseEntity
+                .status(status)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(person);
     }
 
 

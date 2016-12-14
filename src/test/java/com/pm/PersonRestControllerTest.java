@@ -21,7 +21,7 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = PeopleManagementService.class)
 /**
  * Integration tests for PersonRestController, using RestAssured for easy readability.
  */
@@ -78,7 +78,8 @@ public class PersonRestControllerTest {
                 .post("/person")
         .then()
                 .statusCode(HttpStatus.SC_CREATED)
-                .header("location", Matchers.containsString("/person/"));
+                .body("firstName", Matchers.is(kryten.getFirstName()));
+
     }
 
     @Test
@@ -113,13 +114,13 @@ public class PersonRestControllerTest {
         .when()
                 .put("/person/" + arnold.getPersonId())
         .then()
-                .statusCode(HttpStatus.SC_ACCEPTED)
-                .body("firstName", Matchers.is("Arnold"));
+                .statusCode(HttpStatus.SC_OK)
+                .body("firstName", Matchers.is(arnoldsFixedName));
 
         when()
                 .get("/person/" + arnold.getPersonId())
         .then()
-                .body("firstName", Matchers.is("Arnold"));
+                .body("firstName", Matchers.is(arnoldsFixedName));
 
     }
 
